@@ -1,9 +1,7 @@
 <script>
   import Board from "$lib/board.svelte";
   import Leaderboard from "$lib/leaderboard.svelte";
-
-  export let foo;
-  console.log({ foo });
+  import Hand from "$lib/hand.svelte";
 </script>
 
 <h1>Sequence Game</h1>
@@ -11,13 +9,19 @@
   <Leaderboard />
   <Board />
   <div class="col">
-    <h2>Draw Pile</h2>
-    <img width="150" src="/images/cards/back.svg" alt="card_back" />
-    <button>Draw</button>
+    <div class="col">
+      <h2>Draw Pile</h2>
+      <img width="150" src="/images/cards/back.svg" alt="card_back" />
+      <button>Draw</button>
+    </div>
+    <Hand />
   </div>
 </div>
 
 <style>
+  :global(body) {
+    overflow: hidden;
+  }
   :global(.row) {
     display: flex;
     flex-direction: row;
