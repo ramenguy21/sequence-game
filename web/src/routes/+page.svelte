@@ -2,43 +2,88 @@
   import { json } from "@sveltejs/kit";
   import { io } from "socket.io-client";
   import { onMount } from "svelte";
-  /* async () => {
-        const response = await fetch(
-          "http://localhost:3000/new-game/" + username,
-          {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "application/json",
-              // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            //body : []
-          }
-        );
-        const res = await response.text();
-        console.log(res); */
-  let username = "";
+  import { room_name, socket, username } from "../stores";
+  import { goto } from "$app/navigation";
 
-  const socket = io("http://localhost:3000/");
+  $: mode = "join"; //create || join
+  let room_id = "";
+
+  function create_game() {
+    $socket.emit("new-game", $username, (/** @type {string} */ response) => {
+      console.log(response);
+      if (response !== "UNAVAILABLE") {
+        $room_name = response;
+        goto("/game");
+      }
+    });
+  }
 </script>
 
-<div class="text-white bg-black h-screen pt-12">
+<div class={"text-white bg-black h-screen pt-12"}>
   <h1 class="font-bold text-center text-2xl">Sequence Game (weeeee)!</h1>
-  <form class="flex flex-col w-1/4 m-auto mt-12">
-    <label for="username">Enter Username</label>
-    <input
-      class="text-black my-1"
-      bind:value={username}
-      type="text"
-      id="username"
-    />
-    <button
-      on:click={() => {
-        socket.emit("new-game", username);
-      }}
-      class="bg-cyan-500 text-white mt-4 w-1/2 m-auto rounded p-2"
-      >Start Game</button
-    >
+  <form
+    class={mode === "create" ? "flex flex-col w-1/4 m-auto mt-12" : "hidden"}
+  >
+    <div class="flex flex-col">
+      <label for="username">Enter Username</label>
+      <input
+        class="text-black my-1"
+        bind:value={$username}
+        type="text"
+        id="username"
+      />
+    </div>
+    <div class="flex flex-row">
+      <button
+        on:click={create_game}
+        class="bg-cyan-500 text-white mt-4 w-1/2 m-auto rounded p-2"
+        >Start Game</button
+      >
+      <button
+        on:click={() => {
+          mode = "join";
+        }}
+        class="my-4 bg-amber-500 text-white mt-4 w-1/5 text-sm m-auto rounded p-2"
+        >Join a game</button
+      >
+    </div>
+  </form>
+
+  <form class={mode === "join" ? "flex flex-col w-1/4 m-auto mt-12" : "hidden"}>
+    <div class="my-2 flex flex-col">
+      <label for="username">Enter Username</label>
+      <input
+        class="text-black my-1"
+        bind:value={$username}
+        type="text"
+        id="username"
+      />
+    </div>
+    <div class="my-2 flex flex-col">
+      <label for="room_id">Enter Room Name</label>
+      <input
+        class="text-black my-1"
+        bind:value={room_id}
+        type="text"
+        id="room_id"
+      />
+    </div>
+    <div class="flex flex-row my-2 space-x-4">
+      <button
+        on:click={() => {
+          $socket.emit("new-game", username);
+        }}
+        class="bg-cyan-500 text-white mt-4 w-1/2 m-auto rounded p-2"
+        >Join Game</button
+      >
+      <button
+        on:click={() => {
+          mode = "create";
+        }}
+        class="my-4 bg-amber-500 text-white mt-4 w-1/5 text-sm m-auto rounded p-2"
+        >Create a game ?</button
+      >
+    </div>
   </form>
 </div>
 
