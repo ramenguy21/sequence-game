@@ -1,21 +1,37 @@
-<script>
+<script lang="ts">
   import { json } from "@sveltejs/kit";
   import { io } from "socket.io-client";
   import { onMount } from "svelte";
-  import { room_name, socket, username } from "../stores";
+  import { room_name, socket, username, players } from "../stores";
   import { goto } from "$app/navigation";
 
   $: mode = "join"; //create || join
-  let room_id = "";
 
   function create_game() {
-    $socket.emit("new-game", $username, (/** @type {string} */ response) => {
+    $socket.emit("create-game", $username, (response: string) => {
       console.log(response);
       if (response !== "UNAVAILABLE") {
         $room_name = response;
         goto("/game");
       }
     });
+  }
+
+  function join_game() {
+    $socket.emit(
+      "join-game",
+      $room_name,
+      $username,
+      (response: string[] | string) => {
+        console.log(response);
+        //response is expected to be an string array
+        //append that to the global value
+        if (response !== "UNAVAILABLE") {
+          $players.push(...response);
+          goto("/game");
+        }
+      }
+    );
   }
 </script>
 
@@ -63,16 +79,14 @@
       <label for="room_id">Enter Room Name</label>
       <input
         class="text-black my-1"
-        bind:value={room_id}
+        bind:value={$room_name}
         type="text"
         id="room_id"
       />
     </div>
     <div class="flex flex-row my-2 space-x-4">
       <button
-        on:click={() => {
-          $socket.emit("new-game", username);
-        }}
+        on:click={join_game}
         class="bg-cyan-500 text-white mt-4 w-1/2 m-auto rounded p-2"
         >Join Game</button
       >
