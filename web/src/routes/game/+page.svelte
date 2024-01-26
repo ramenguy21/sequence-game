@@ -4,19 +4,21 @@
   import Hand from "$lib/hand.svelte";
   import { page } from "$app/stores";
   import { io } from "socket.io-client";
+
+  let selected_card = "";
 </script>
 
 <h1>Sequence Game</h1>
 <div class="row">
   <Leaderboard />
-  <Board />
+  <Board sel_card={selected_card} />
   <div class="col">
     <div class="col">
       <h2>Draw Pile</h2>
       <img width="150" src="/images/cards/back.svg" alt="card_back" />
       <button>Draw</button>
     </div>
-    <Hand />
+    <Hand bind:selected_card />
   </div>
 </div>
 

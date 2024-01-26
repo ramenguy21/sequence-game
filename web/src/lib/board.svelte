@@ -1,4 +1,6 @@
 <script>
+  export let sel_card = "";
+
   const grid = [
     ["f", "10s", "qs", "ks", "as", "2d", "3d", "4d", "5d", "f"],
     ["9s", "10h", "9h", "8h", "7h", "6h", "5h", "4h", "3h", "6d"],
@@ -16,7 +18,20 @@
 <div class="wrapper">
   {#each grid as row}
     {#each row as card}
-      <img class="card" src="/images/cards/{card}.svg" alt={card} />
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        class="card"
+        id="droptarget"
+        on:dragover={() => {
+          console.log("HEY! :D");
+        }}
+      >
+        <img
+          class={sel_card === card ? "hover" : ""}
+          src="/images/cards/{card}.svg"
+          alt={card}
+        />
+      </div>
     {/each}
   {/each}
 </div>
@@ -33,6 +48,17 @@
   .card {
     width: 150px;
     height: 100px;
+
+    transition: 0.2s;
+  }
+
+  .card > img {
+    width: 150px;
+    height: 100px;
     transform: rotate(90deg);
+  }
+
+  .hover {
+    border: 5px solid green;
   }
 </style>

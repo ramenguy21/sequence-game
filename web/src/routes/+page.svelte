@@ -2,7 +2,13 @@
   import { json } from "@sveltejs/kit";
   import { io } from "socket.io-client";
   import { onMount } from "svelte";
-  import { room_name, socket, username, players } from "../stores";
+  import {
+    room_name,
+    socket,
+    username,
+    players,
+    mouse_position,
+  } from "../stores";
   import { goto } from "$app/navigation";
 
   $: mode = "join"; //create || join

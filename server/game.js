@@ -85,12 +85,29 @@ class Game {
   }
 
   //this is called after the socket has declared end of turn.
-  //position is meant to be a two element array [y_pos, x_pos]
+  //position is meant to be a two element array [y_pos : int, x_pos : int]
+  //player is the index of the player who made the move
   //returns the player who goes next.
   handle_turn(player, card, position) {
-    //double check if this is a valid move using board array
+    //select the element
+    current_move = this.board[position[0]][position[1]];
+    //check if the move is valid
+
+    //handle edge case for jokers
+
+    //handle edge case for free space
+
+    //card matches (also checks if no token is placed)
+    if (card !== current_move) {
+      console.log("Invalid attempt to place a card");
+      return this.current_turn_idx;
+    }
 
     //mutate the string to have either r, g, b at the start marking it as occupied.
+    this.board[position[0]][position[1]] = current_move + player[player].token;
+
+    console.info("[MOVE] : " + this.board);
+
     return this.next_turn();
   }
 
