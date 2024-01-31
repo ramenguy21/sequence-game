@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import Game from "./game";
 import SocketStore from "./store";
+import "dotenv/config";
 
 const app = express();
 const server = createServer(app);
@@ -238,8 +239,8 @@ app.get("/", (req, res) => {
   res.send("Hey !");
 });
 
-server.listen(3000, () => {
-  console.log("Server is running at http://localhost:3000");
+server.listen(process.env.PORT, () => {
+  console.log(`Server is running at http://0.0.0.0:${process.env.PORT}`);
 });
 
 //----DEBUGGGING

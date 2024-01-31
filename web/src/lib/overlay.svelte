@@ -27,6 +27,7 @@
       Waiting for players
     </h1>
     <ul class="mt-4 text-white text-center">
+      <li>{$username + "(YOU)"}</li>
       {#each $players as player}
         <li>{player === $username ? player + " (YOU)" : player}</li>
       {/each}
