@@ -1,16 +1,46 @@
 <script lang="ts">
-  import { mouse_position } from "../stores";
+  import {
+    mouse_position,
+    is_placed,
+    is_waiting,
+    socket,
+    current_turn,
+    room_name,
+    username,
+  } from "../stores";
 
-  //export let current_hand = []
-  const demo_hand = ["2h", "qc", "as", "6s", "3d", "7c", "kh"];
-  const sdiv = 90 / demo_hand.length;
+  let hand = ["2h", "qc", "as", "6s", "3d", "7c", "kh"];
+  const sdiv = 90 / hand.length;
+
+  $socket.on("game-start", (starting_hand, cb) => {
+    $is_waiting = false;
+    console.log("[EVENT] Game has been started !");
+    hand = starting_hand;
+    cb("done");
+  });
+
+  $: {
+    const value = $is_placed;
+    handle_card_placed();
+  }
+  //card has been placed, pop from the array and rearrange
+  function handle_card_placed() {
+    hand.forEach((card, index) => {
+      if (card === selected_card) {
+        //remove it
+        hand.splice(index, 1);
+        selected_card = "";
+      }
+    });
+    $is_placed = false;
+  }
 
   export let selected_card = "";
 </script>
 
 <div class="container">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  {#each demo_hand as card, index}
+  {#each hand as card, index}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       on:dragstart={() => {

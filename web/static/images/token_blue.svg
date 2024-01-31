@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: blue;
+        stroke: #fff;
+        stroke-linejoin: round;
+        stroke-width: 3px;
+      }
+
+      .cls-2 {
+        font-size: 66.667px;
+        fill: #fff;
+        font-family: Lora;
+        font-style: italic;
+      }
+    </style>
+  </defs>
+  <circle class="cls-1" cx="75" cy="75" r="75"/>
+  <text id="S" class="cls-2" x="56" y="98">S</text>
+</svg>

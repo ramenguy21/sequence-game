@@ -1,15 +1,22 @@
-<script>
+<script lang="ts">
   import Board from "$lib/board.svelte";
   import Leaderboard from "$lib/leaderboard.svelte";
   import Hand from "$lib/hand.svelte";
-  import { page } from "$app/stores";
-  import { io } from "socket.io-client";
+  import Overlay from "$lib/overlay.svelte";
+  import { current_turn, is_waiting, socket, username } from "../../stores";
 
   let selected_card = "";
+
+  $socket.on("turn-change", (player) => {
+    $current_turn = player;
+  });
 </script>
 
 <h1>Sequence Game</h1>
 <div class="row">
+  {#if $is_waiting}
+    <Overlay />
+  {/if}
   <Leaderboard />
   <Board sel_card={selected_card} />
   <div class="col">

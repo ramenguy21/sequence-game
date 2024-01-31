@@ -1,5 +1,22 @@
-<script>
+<script lang="ts">
+  import { createEventDispatcher, onMount } from "svelte";
+  import {
+    current_turn,
+    is_placed,
+    room_name,
+    socket,
+    turn_log,
+    username,
+  } from "../stores";
+
   export let sel_card = "";
+  //let dispatch = createEventDispatcher();
+  $socket.on(
+    "player-move",
+    (data: { position: number[]; token: string }, cb) => {
+      grid[data.position[0]][data.position[1]] += data.token;
+    }
+  );
 
   const grid = [
     ["f", "10s", "qs", "ks", "as", "2d", "3d", "4d", "5d", "f"],
@@ -13,31 +30,85 @@
     ["2s", "5c", "as", "ks", "qs", "10s", "9s", "8s", "7s", "ad"],
     ["f", "6c", "7c", "8c", "9c", "10c", "qc", "kc", "ac", "f"],
   ];
+
+  //possible token value to check at -1 index
+  const token_array = ["r", "g", "b"];
 </script>
 
 <div class="wrapper">
-  {#each grid as row}
-    {#each row as card}
+  {#each grid as row, i}
+    {#each row as card, j}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div
-        class="card"
-        id="droptarget"
-        on:dragover={() => {
-          console.log("HEY! :D");
-        }}
-      >
-        <img
-          class={sel_card === card ? "hover" : ""}
-          src="/images/cards/{card}.svg"
-          alt={card}
-        />
-      </div>
+      <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+      <!--check if token is placed-->
+      {#if token_array.includes(card.at(-1))}
+        <div class="card">
+          <span class="occupied_card">
+            <img
+              src="/images/cards/{card.slice(0, -1)}.svg"
+              alt={card.slice(0, -1)}
+            />
+            <img class="token" src="/images/token_red.svg" alt="token" />
+          </span>
+        </div>
+      {:else}
+        <div
+          class="card"
+          id="droptarget"
+          on:mouseover={() => {
+            if (sel_card === card && $current_turn === $username) {
+              window.addEventListener("mouseup", (event) => {
+                //this misfires sometimes even if the dragged card is not hovering properly but eh. need to sync somehow ...
+                grid[i][j] = card + "r";
+                $socket.emit(
+                  "end-turn",
+                  $room_name,
+                  $username,
+                  { position: [i, j], card: card },
+                  () => {
+                    //card has been added to the grid
+                    //dispatch("card_placed");
+                    $is_placed = true;
+                  }
+                );
+              });
+            }
+          }}
+        >
+          <!--create these into dropzones if the card gets selected and use the drop and drop API, highlight free spaces as well-->
+          <span>
+            <img
+              class={sel_card === card || (card === "f" && sel_card)
+                ? "hover"
+                : ""}
+              src="/images/cards/{card}.svg"
+              alt={card}
+            />
+          </span>
+        </div>
+      {/if}
     {/each}
   {/each}
 </div>
 
 <style>
+  .occupied_card {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .occupied_card > img {
+    position: absolute;
+  }
+  .token {
+    border: 2px solid blue;
+    margin-top: 25px;
+    margin-left: 10px;
+    width: 50px;
+    height: 50px;
+  }
+
   .wrapper {
+    z-index: 2;
     display: grid;
     grid-template-columns: repeat(10, 110px);
     grid-template-rows: repeat(10, 80px);
@@ -48,14 +119,20 @@
   .card {
     width: 150px;
     height: 100px;
-
     transition: 0.2s;
   }
 
-  .card > img {
+  span {
     width: 150px;
     height: 100px;
+  }
+  span > img {
     transform: rotate(90deg);
+    max-width: 100%;
+    max-height: 100%;
+    height: 100px;
+    object-fit: scale-down;
+    transition: 0.2s;
   }
 
   .hover {

@@ -2,7 +2,7 @@ import { standard_deck } from "./constants";
 //Sequence Game Class responsible for providing a base template to mutate game state and stuff
 class Game {
   draw_pile = standard_deck;
-  players = []; // {id : "", hand : [], token : "red/green/blue"}
+  players: { name: string; hand: string[]; token: string }[] = [];
   //variable responsible for managing turns, ensure that when mutating, it wraps around the players array properly
   current_turn_idx = 0;
 
@@ -19,54 +19,24 @@ class Game {
     ["2s", "5c", "as", "ks", "qs", "10s", "9s", "8s", "7s", "ad"],
     ["f", "6c", "7c", "8c", "9c", "10c", "qc", "kc", "ac", "f"],
   ];
+
   //list of possible colors of tokens
   token_list = ["r", "g", "b"];
 
-  /**token array responsible for handling the chips placed by the players, use this to check if there is a match
-  token_board = [
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-  ];**/
-
   //when game is intitalized
-  constructor(players_list) {
+  constructor(players_list: string[]) {
+    if (!players_list) {
+      throw new Error("[Game] : Error initializing game");
+    }
+
     if (players_list.length > 3) {
       console.error(
         "[ERROR]: attempt to create a game with more than 3 players, please do not :)"
       );
       return;
     }
-    //shuffle the deck.
-    shuffle();
-    //divide the cards amongst the players and choose their token color
-    //Player is an array of objects ranging from 2-3 elements.
-    //If two - 7 cards each
-    //If three - 6 cards each
 
-    players_list.map((pl) => {
-      let rand_token_idx = Math.floor(Math.random() * this.token_list.length);
-      this.players.push({
-        name: pl.name,
-        hand: this.draw_pile.splice(-1, players_list.length === 2 ? 7 : 6),
-        token: this.token_list.splice(rand_token_idx, 1),
-      });
-    });
-
-    //give the turn to whoever ended up in the first place
-    this.current_turn_idx = 0;
-  }
-
-  //info : does this work in-place ?
-  //does this even work at all ?
-  shuffle() {
+    //----Shuffling algorithm----
     let curr_idx = this.draw_pile.length,
       rand_idx;
 
@@ -82,29 +52,61 @@ class Game {
         this.draw_pile[curr_idx],
       ];
     }
+    //----Shuffling algorithm----
+
+    //divide the cards amongst the players and choose their token color
+    //Player is an array of objects ranging from 2-3 elements.
+    //If two - 7 cards each
+    //If three - 6 cards each
+
+    players_list.map((pl) => {
+      let rand_token_idx = Math.floor(Math.random() * this.token_list.length);
+      this.players.push({
+        name: pl,
+        hand: this.draw_pile.splice(0, 7), //players_list.length === 2 ? 7 : 6
+        token: this.token_list.splice(rand_token_idx, 1).at(0) || "",
+      });
+    });
+
+    //give the turn to whoever ended up in the first place
+    this.current_turn_idx = 0;
   }
 
   //this is called after the socket has declared end of turn.
   //position is meant to be a two element array [y_pos : int, x_pos : int]
-  //player is the index of the player who made the move
+  //player is the name of the player who made the move
   //returns the player who goes next.
-  handle_turn(player, card, position) {
+  handle_turn(player: string, card: string, position: number[]) {
     //select the element
-    current_move = this.board[position[0]][position[1]];
+    const current_move = this.board[position[0]][position[1]];
+
+    //select the player
+    const player_idx = this.players.findIndex((pl) => pl.name === player);
+
     //check if the move is valid
 
     //handle edge case for jokers
 
     //handle edge case for free space
+    if (
+      (position[0] === 0 && position[1] === 0) ||
+      (position[0] === 0 && position[1] === 9) ||
+      (position[0] === 9 && position[1] === 0) ||
+      (position[0] === 9 && position[1] === 9)
+    ) {
+      this.board[position[0]][position[1]] =
+        current_move + this.players[player_idx].token;
+    }
 
     //card matches (also checks if no token is placed)
     if (card !== current_move) {
       console.log("Invalid attempt to place a card");
-      return this.current_turn_idx;
+      return this.get_player_details_by_index(this.current_turn_idx).name;
     }
 
     //mutate the string to have either r, g, b at the start marking it as occupied.
-    this.board[position[0]][position[1]] = current_move + player[player].token;
+    this.board[position[0]][position[1]] =
+      current_move + this.players[player_idx].token;
 
     console.info("[MOVE] : " + this.board);
 
@@ -121,6 +123,10 @@ class Game {
   next_turn() {
     this.current_turn_idx = (this.current_turn_idx + 1) % this.players.length;
     return this.players[this.current_turn_idx].name;
+  }
+
+  get_player_details_by_index(index: number) {
+    return this.players[index];
   }
 }
 
