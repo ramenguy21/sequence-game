@@ -14,7 +14,19 @@
   $socket.on(
     "player-move",
     (data: { position: number[]; token: string }, cb) => {
-      grid[data.position[0]][data.position[1]] += data.token;
+      console.log("Got player move !");
+
+      if (
+        token_array.includes(
+          grid[data.position[0]][data.position[1]].at(-1) || ""
+        )
+      ) {
+        console.info("Detected a duplicate call for player-move");
+        cb("DONE");
+      } else {
+        grid[data.position[0]][data.position[1]] += data.token;
+        cb("DONE");
+      }
     }
   );
 
@@ -48,7 +60,15 @@
               src="/images/cards/{card.slice(0, -1)}.svg"
               alt={card.slice(0, -1)}
             />
-            <img class="token" src="/images/token_red.svg" alt="token" />
+            <img
+              class="token"
+              src={card.at(-1) === "r"
+                ? "/images/token_red.svg"
+                : card.at(-1) === "g"
+                  ? "/images/token_green.svg"
+                  : "/images/token_blue.svg"}
+              alt="token"
+            />
           </span>
         </div>
       {:else}
@@ -60,17 +80,17 @@
               window.addEventListener("mouseup", (event) => {
                 //this misfires sometimes even if the dragged card is not hovering properly but eh. need to sync somehow ...
                 grid[i][j] = card + "r";
-                $socket.emit(
-                  "end-turn",
-                  $room_name,
-                  $username,
-                  { position: [i, j], card: card },
-                  () => {
+                $socket
+                  .emitWithAck("end-turn", $room_name, $username, {
+                    position: [i, j],
+                    card: card,
+                  })
+                  .then(() => {
                     //card has been added to the grid
                     //dispatch("card_placed");
                     $is_placed = true;
-                  }
-                );
+                  })
+                  .catch((err) => console.log(err));
               });
             }
           }}

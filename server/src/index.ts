@@ -133,6 +133,8 @@ io.on("connection", (socket) => {
     console.log(current_room);
 
     if (current_room_idx === -1 || current_room.state !== "WAITING") {
+      console.log(current_room);
+      console.log(current_room_idx);
       callback("INVALID_ROOM");
       return;
     }
@@ -205,6 +207,7 @@ io.on("connection", (socket) => {
         console.log("Invalid end-turn call on room id: ", room_idx);
       }
 
+      //call the handler for turn management on the game class
       const next_player = game_rooms[room_idx].game?.handle_turn(
         player_name,
         data.card,
@@ -218,11 +221,11 @@ io.on("connection", (socket) => {
       }
       //mutate board states of all clients except the initiating one.
       io.to(room_name)
-        .except(game_rooms[room_idx].players.get(player_name) as string)
+        .except(socket.id)
         .emitWithAck("player-move", {
           position: data.position,
           token: game_rooms[room_idx].game?.get_player_details_by_index(
-            game_rooms[room_idx].game?.current_turn_idx || -1
+            game_rooms[room_idx].game!.current_turn_idx
           ).token,
         })
         .then(() => {
@@ -230,6 +233,7 @@ io.on("connection", (socket) => {
           io.to(room_name).emit("turn-change", next_player);
         })
         .catch((error) => console.error(error));
+      callback("DONE");
     }
   );
 });
@@ -244,4 +248,4 @@ server.listen(process.env.PORT, () => {
 });
 
 //----DEBUGGGING
-setInterval(() => console.info(game_rooms), 10000);
+//setInterval(() => console.info(game_rooms), 10000);

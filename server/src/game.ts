@@ -100,7 +100,7 @@ class Game {
 
     //card matches (also checks if no token is placed)
     if (card !== current_move) {
-      console.log("Invalid attempt to place a card");
+      console.log("Invalid attempt to place a card", card, current_move);
       return this.get_player_details_by_index(this.current_turn_idx).name;
     }
 

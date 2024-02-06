@@ -19,7 +19,7 @@
 <div class="board">
   <h2>Players</h2>
   <ul>
-    <li>{$username}</li>
+    <li>{$username} (YOU)</li>
     {#each $players as player}
       <li>{player}</li>
     {/each}

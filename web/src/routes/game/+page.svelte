@@ -17,7 +17,12 @@
   {#if $is_waiting}
     <Overlay />
   {/if}
-  <Leaderboard />
+  <div>
+    <Leaderboard />
+    <div class="bg-blue-200 p-2">
+      <p>It is {$current_turn}'s turn</p>
+    </div>
+  </div>
   <Board sel_card={selected_card} />
   <div class="col">
     <div class="col">
