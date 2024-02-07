@@ -49,6 +49,30 @@ const game_rooms: Room[] = [
     state: "AVAILABLE",
     game: null,
   },
+  {
+    name: "rollerdisco",
+    players: new Map(),
+    state: "AVAILABLE",
+    game: null,
+  },
+  {
+    name: "hiracutes",
+    players: new Map(),
+    state: "AVAILABLE",
+    game: null,
+  },
+  {
+    name: "grand-moxy",
+    players: new Map(),
+    state: "AVAILABLE",
+    game: null,
+  },
+  {
+    name: "houdini",
+    players: new Map(),
+    state: "AVAILABLE",
+    game: null,
+  },
 ];
 
 //cors policies :: TODO: Update these when deploying.
@@ -161,7 +185,7 @@ io.on("connection", (socket) => {
 
     //notify all the clients in the socketio room that the game has started
 
-    //iterate over all the connected clients and send them their hand
+    //iterate over all the connected clients and send them their hand and token
     new_game.players.forEach(async (player) => {
       const s_id = current_room.players.get(player.name);
       if (s_id === undefined) {
@@ -174,7 +198,7 @@ io.on("connection", (socket) => {
       await io
         .to(s_id as string)
         .timeout(10000)
-        .emitWithAck("game-start", player.hand)
+        .emitWithAck("game-start", player.hand, player.token)
         .catch((e) => console.error(e));
     });
 
@@ -207,6 +231,13 @@ io.on("connection", (socket) => {
         console.log("Invalid end-turn call on room id: ", room_idx);
       }
 
+      //store the token to send in the data here because handle_turn will mutate the current_turn_index
+      const this_turn_token = game_rooms[
+        room_idx
+      ].game?.get_player_details_by_index(
+        game_rooms[room_idx].game!.current_turn_idx
+      ).token;
+
       //call the handler for turn management on the game class
       const next_player = game_rooms[room_idx].game?.handle_turn(
         player_name,
@@ -224,16 +255,17 @@ io.on("connection", (socket) => {
         .except(socket.id)
         .emitWithAck("player-move", {
           position: data.position,
-          token: game_rooms[room_idx].game?.get_player_details_by_index(
-            game_rooms[room_idx].game!.current_turn_idx
-          ).token,
+          token: this_turn_token,
         })
         .then(() => {
           //notify all clients that there has been a turn change
           io.to(room_name).emit("turn-change", next_player);
         })
         .catch((error) => console.error(error));
-      callback("DONE");
+      //callback the client with the updated hand
+      callback(
+        game_rooms[room_idx].game?.get_player_details_by_name(player_name)?.hand
+      );
     }
   );
 });

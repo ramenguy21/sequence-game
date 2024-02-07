@@ -101,15 +101,33 @@ class Game {
     //card matches (also checks if no token is placed)
     if (card !== current_move) {
       console.log("Invalid attempt to place a card", card, current_move);
-      return this.get_player_details_by_index(this.current_turn_idx).name;
+      return this.players[this.current_turn_idx].name;
     }
 
     //mutate the string to have either r, g, b at the start marking it as occupied.
     this.board[position[0]][position[1]] =
       current_move + this.players[player_idx].token;
 
-    console.info("[MOVE] : " + this.board);
+    //remove the card from hand
+    const card_idx = this.players[this.current_turn_idx].hand.indexOf(card);
 
+    if (card_idx === -1) {
+      console.error("Invalid attempt to place a card, no match found in hand");
+      return this.players[this.current_turn_idx].name;
+    }
+    //and while there are cards in the draw pile, add it to the player's hand
+    if (this.draw_pile.length) {
+      this.players[this.current_turn_idx].hand[card_idx] =
+        this.draw_pile.pop()!;
+    } else {
+      //else just remove it
+      this.players[this.current_turn_idx].hand.splice(card_idx, 1);
+    }
+
+    //log
+    console.info("[MOVE] : " + card + " to " + position);
+
+    //return who goes next
     return this.next_turn();
   }
 
@@ -127,6 +145,10 @@ class Game {
 
   get_player_details_by_index(index: number) {
     return this.players[index];
+  }
+
+  get_player_details_by_name(name: string) {
+    return this.players.find((el) => el.name === name);
   }
 }
 
